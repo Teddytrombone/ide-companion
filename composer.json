@@ -1,0 +1,45 @@
+{
+    "name": "teddytrombone/ide-companion",
+    "type": "typo3-cms-extension",
+    "description": "",
+    "authors": [
+        {
+            "name": "Manfred Egger",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "typo3/cms-core": "^11.5.0",
+        "typo3/cms-fluid": "^11.5.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Teddytrombone\\IdeCompanion\\": "Classes"
+        }
+    },
+    "replace": {
+        "typo3-ter/ide-companion": "self.version"
+    },
+    "config": {
+        "vendor-dir": ".Build/vendor",
+        "bin-dir": ".Build/bin",
+        "allow-plugins": {
+            "typo3/class-alias-loader": true,
+            "typo3/cms-composer-installers": true
+        }
+    },
+    "require-dev": {
+        "typo3/testing-framework": "^7"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Teddytrombone\\IdeCompanion\\Tests\\": "Tests"
+        }
+    },
+    "extra": {
+        "typo3/cms": {
+            "extension-key": "ide-companion",
+            "web-dir": ".Build/Web"
+        }
+    }
+}

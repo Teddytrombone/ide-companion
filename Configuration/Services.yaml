@@ -1,0 +1,22 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    public: false
+
+  Teddytrombone\IdeCompanion\:
+    resource: "../Classes/*"
+
+  Teddytrombone\IdeCompanion\Command\LspCommand:
+    tags:
+      - name: "console.command"
+        command: "idecompanion:lsp"
+        schedulable: false
+        description: "Runs LSP server"
+
+  Teddytrombone\IdeCompanion\Command\TemplateParserTestCommand:
+    tags:
+      - name: "console.command"
+        command: "idecompanion:test"
+        schedulable: false
+        description: "Runs tests"

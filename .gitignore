@@ -1,0 +1,6 @@
+.Build/
+.idea/
+Build/testing-docker/.env
+composer.lock
+Resources/Private/Vendor
+Resources/Private/composer.lock

@@ -1,0 +1,13 @@
+{
+    "description": "Dependencies for non composer mode",
+    "replace": {
+        "psr/log": "*",
+        "psr/event-dispatcher": "*"
+    },
+    "require": {
+        "phpactor/language-server": "^3.4"
+    },
+    "config": {
+        "vendor-dir": "Vendor"
+    }
+}
