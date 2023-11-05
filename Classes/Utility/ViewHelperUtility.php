@@ -2,6 +2,10 @@
 
 namespace Teddytrombone\IdeCompanion\Utility;
 
+use Doctrine\RST\Configuration;
+use Doctrine\RST\Kernel;
+use Doctrine\RST\Parser;
+use League\HTMLToMarkdown\HtmlConverter;
 use Phpactor\LanguageServerProtocol\Position;
 use Phpactor\LanguageServerProtocol\Range;
 use phpDocumentor\Reflection\DocBlockFactory;
@@ -23,12 +27,34 @@ class ViewHelperUtility
      */
     protected $docBlockFactory;
 
+    /**
+     * @var ContextFactory
+     */
     protected $contextFactory;
+
+    /**
+     * @var Parser
+     */
+    protected $rstParser;
+
+    /**
+     * @var HtmlConverter
+     */
+    protected $htmlConverter;
+
 
     public function __construct(?DocBlockFactoryInterface $docBlockFactory = null)
     {
         $this->docBlockFactory = $docBlockFactory ?: DocBlockFactory::createInstance();
         $this->contextFactory = new ContextFactory();
+
+        $configuration = new Configuration();
+        $configuration->silentOnError(true);
+        $configuration->abortOnError(false);
+        $configuration->setIgnoreInvalidReferences(true);
+        $kernel = new Kernel($configuration);
+        $this->rstParser = new Parser($kernel);
+        $this->htmlConverter = new HtmlConverter();
     }
 
     /**
@@ -95,7 +121,13 @@ class ViewHelperUtility
         $docComment = $reflectionClass->getDocComment();
         if ($docComment) {
             $parsed = $this->docBlockFactory->create($docComment, $this->contextFactory->createFromReflector($reflectionClass));
-            return $parsed->getSummary() . "\n\n" . $parsed->getDescription();
+            $description = $parsed->getDescription();
+            if (!empty($description)) {
+                $description = $this->rstParser->parse($parsed->getDescription())->render();
+                $description = strip_tags($this->htmlConverter->convert($description));
+            }
+
+            return trim($parsed->getSummary() . "\n\n" . $description);
         }
         return '';
     }
