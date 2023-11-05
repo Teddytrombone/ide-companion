@@ -313,6 +313,21 @@ class TagCompletionParserTest extends UnitTestCase
         $this->assertEquals($tag, $result->getTag());
     }
 
+    /**
+     * @test
+     */
+
+    public function testFullViewHelperTagsFromPosition()
+    {
+        $string = 'foobar<f:translate key="test" />';
+        $parser = GeneralUtility::makeInstance(CompletionParser::class);
+        $allowedNamespaces = ['f', 'bcgeneric'];
+        $result = $parser->parseForCompleteFluidTag($string, 10, $allowedNamespaces);
+        $this->assertEquals(ParsedTagResult::STATUS_TAG, $result->getStatus());
+        $this->assertEquals('f', $result->getNamespace());
+        $this->assertEquals('translate', $result->getTag());
+    }
+
     protected function simpleTagProvider(): array
     {
         return array_merge(

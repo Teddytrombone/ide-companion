@@ -84,6 +84,16 @@ class CompletionParser
 		)?                           #
     $/xs';
 
+    public function parseForCompleteFluidTag($content, $position, $allowedNamespaces): ParsedTagResult
+    {
+        $after = substr($content, $position);
+        $offset = 0;
+        if (preg_match('/^(?:' . self::SUBPATTERN_VIEWHELPER . '|:)+/s', $after, $match)) {
+            $offset = strlen($match[0]);
+        }
+        return $this->parseForFluidTag($content, $position + $offset, $allowedNamespaces);
+    }
+
 
     public function parseForFluidTag($content, $position, $allowedNamespaces): ParsedTagResult
     {

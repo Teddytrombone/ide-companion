@@ -12,6 +12,11 @@ use Phpactor\LanguageServerProtocol\CompletionItem;
 use Phpactor\LanguageServerProtocol\CompletionItemKind;
 use Phpactor\LanguageServerProtocol\CompletionOptions;
 use Phpactor\LanguageServerProtocol\CompletionParams;
+use Phpactor\LanguageServerProtocol\DefinitionOptions;
+use Phpactor\LanguageServerProtocol\DefinitionParams;
+use Phpactor\LanguageServerProtocol\Location;
+use Phpactor\LanguageServerProtocol\Position;
+use Phpactor\LanguageServerProtocol\Range;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use Teddytrombone\IdeCompanion\Lsp\Converter\PositionConverter;
 use Teddytrombone\IdeCompanion\Parser\CompletionParser;
@@ -25,9 +30,21 @@ class FluidCompletionHandler implements Handler, CanRegisterCapabilities
      */
     private $workspace;
 
-    public function __construct(Workspace $workspace)
+    /**
+     * @var ViewHelperUtility
+     */
+    private $viewHelperUtility;
+
+    /**
+     * @var CompletionParser
+     */
+    private $completionParser;
+
+    public function __construct(Workspace $workspace, ?ViewHelperUtility $viewHelperUtility = null, ?CompletionParser $completionParser = null)
     {
         $this->workspace = $workspace;
+        $this->viewHelperUtility = $viewHelperUtility ?? GeneralUtility::makeInstance(ViewHelperUtility::class);
+        $this->completionParser = $completionParser ?? GeneralUtility::makeInstance(CompletionParser::class);
     }
 
 
@@ -35,21 +52,42 @@ class FluidCompletionHandler implements Handler, CanRegisterCapabilities
     {
         return [
             'textDocument/completion' => 'complete',
+            'textDocument/definition' => 'definition',
         ];
     }
 
-    public function complete(CompletionParams $completionParams, CancellationToken $cancellation): Promise
+    public function definition(DefinitionParams $params): Promise
     {
-        return \Amp\call(function () use ($completionParams, $cancellation) {
-            $uriToTextDocument = $completionParams->textDocument->uri;
-            $doc = $this->workspace->get($uriToTextDocument);
-            $viewHelperUtility = GeneralUtility::makeInstance(ViewHelperUtility::class);
-            $namespacedTags = $viewHelperUtility->getPossibleTagsFromSource($doc->text);
-            $completionItems = [];
-            $byteOffset = PositionConverter::positionToByteOffset($completionParams->position, $doc->text);
+        return \Amp\call(function () use ($params) {
+            $textDocument = $this->workspace->get($params->textDocument->uri);
+            $offset = PositionConverter::positionToByteOffset($params->position, $textDocument->text);
 
-            $parser = GeneralUtility::makeInstance(CompletionParser::class);
-            $result = $parser->parseForFluidTag($doc->text, $byteOffset->toInt(), array_keys($namespacedTags));
+            $namespacedTags = $this->viewHelperUtility->getPossibleTagsFromSource($textDocument->text);
+            $result = $this->completionParser->parseForCompleteFluidTag($textDocument->text, $offset->toInt(), array_keys($namespacedTags));
+
+            if (
+                in_array($result->getStatus(), [ParsedTagResult::STATUS_TAG, ParsedTagResult::STATUS_ATTRIBUTE])
+            ) {
+                $file = $namespacedTags[$result->getNamespace()][$result->getTag()]['file'] ?? null;
+                $range = $namespacedTags[$result->getNamespace()][$result->getTag()]['range'] ?? null;
+                if ($file && $range) {
+                    return new Location('file://' . $file, $range);
+                }
+            }
+            return null;
+        });
+    }
+
+    public function complete(CompletionParams $params, CancellationToken $cancellation): Promise
+    {
+        return \Amp\call(function () use ($params, $cancellation) {
+            $completionItems = [];
+
+            $textDocument = $this->workspace->get($params->textDocument->uri);
+            $offset = PositionConverter::positionToByteOffset($params->position, $textDocument->text);
+
+            $namespacedTags = $this->viewHelperUtility->getPossibleTagsFromSource($textDocument->text);
+            $result = $this->completionParser->parseForFluidTag($textDocument->text, $offset->toInt(), array_keys($namespacedTags));
 
             switch ($result->getStatus()) {
                 case ParsedTagResult::STATUS_NAMESPACE:
@@ -117,5 +155,6 @@ class FluidCompletionHandler implements Handler, CanRegisterCapabilities
     public function registerCapabiltiies(ServerCapabilities $capabilities): void
     {
         $capabilities->completionProvider = new CompletionOptions(['<', '{', '(', ' ']);
+        $capabilities->definitionProvider = true;
     }
 }

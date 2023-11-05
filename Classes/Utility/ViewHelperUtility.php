@@ -2,6 +2,8 @@
 
 namespace Teddytrombone\IdeCompanion\Utility;
 
+use Phpactor\LanguageServerProtocol\Position;
+use Phpactor\LanguageServerProtocol\Range;
 use phpDocumentor\Reflection\DocBlockFactory;
 use phpDocumentor\Reflection\Types\ContextFactory;
 use ReflectionClass;
@@ -68,6 +70,8 @@ class ViewHelperUtility
                     'tagName' => $tagName,
                     'description' => $this->getDescription($reflectionClass),
                     'arguments' => $this->getArgumentDefinition($reflectionClass),
+                    'file' => $reflectionClass->getFileName(),
+                    'range' => new Range(new Position($reflectionClass->getStartLine(), 0), new Position($reflectionClass->getEndLine(), 0)),
                 ];
             }
         }
