@@ -4,16 +4,19 @@ declare(strict_types=1);
 
 namespace Teddytrombone\IdeCompanion\Parser;
 
-use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3Fluid\Fluid\Core\Parser\Patterns;
-use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
+
+/**
+ *
+ * Parses for Fluid tags with regex patterns taken from TYPO3Fluid and adapted so it works with partial fluid tags
+ * back from where the cureser is at the moment.
+ * As of regexes and TYPO3Fluid not supporting "forgivving" parsing, this is kind of a mess.
+ *
+ */
 class CompletionParser
 {
-    private const NOT_FLUID = 'not-fluid';
 
     private const SUBPATTERN_VIEWHELPER = '[a-zA-Z0-9\\.]';
 

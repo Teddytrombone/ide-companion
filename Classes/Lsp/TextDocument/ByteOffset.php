@@ -4,6 +4,9 @@ namespace Teddytrombone\IdeCompanion\Lsp\TextDocument;
 
 use Teddytrombone\IdeCompanion\Lsp\TextDocument\Exception\InvalidByteOffset;
 
+/**
+ * Taken from phpactor/phpactor
+ */
 class ByteOffset
 {
     private int $offset;
@@ -25,10 +28,10 @@ class ByteOffset
     }
 
     /**
- *
- * @param int|ByteOffset $value
- */
-    public static function fromUnknown( $value): self
+     *
+     * @param int|ByteOffset $value
+     */
+    public static function fromUnknown($value): self
     {
         if ($value instanceof ByteOffset) {
             return $value;

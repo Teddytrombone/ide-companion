@@ -11,6 +11,8 @@ use RuntimeException;
  * Lines and columns start with 1.
  *
  * The "a" in "abcd" would have line "1" and column "1".
+ *
+ * Taken from phpactor/phpactor
  */
 final class LineCol
 {

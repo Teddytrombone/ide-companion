@@ -1,6 +1,6 @@
 <?php
 
-namespace Teddytrombone\IdeCompanion;
+namespace Teddytrombone\IdeCompanion\Lsp\LanguageServer;
 
 use Phpactor\LanguageServer\Adapter\Psr\AggregateEventDispatcher;
 use Phpactor\LanguageServer\Core\Dispatcher\ArgumentResolver\PassThroughArgumentResolver;
@@ -15,7 +15,6 @@ use Phpactor\LanguageServerProtocol\InitializeParams;
 use Phpactor\LanguageServer\Core\Dispatcher\Dispatcher;
 use Phpactor\LanguageServer\Core\Handler\HandlerMethodRunner;
 use Phpactor\LanguageServer\Core\Dispatcher\DispatcherFactory;
-use Phpactor\LanguageServer\Handler\System\ExitHandler;
 use Phpactor\LanguageServer\Handler\Workspace\CommandHandler;
 use Phpactor\LanguageServer\Middleware\ResponseHandlingMiddleware;
 use Phpactor\LanguageServer\Core\Command\CommandDispatcher;
@@ -34,9 +33,10 @@ use Phpactor\LanguageServer\Core\Server\Transmitter\MessageTransmitter;
 use Phpactor\LanguageServer\Middleware\HandlerMiddleware;
 use Phpactor\LanguageServer\Middleware\ShutdownMiddleware;
 use Psr\Log\LoggerInterface;
+use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use Teddytrombone\IdeCompanion\Lsp\Completion\FluidCompletionHandler;
 
-class AcmeLsDispatcherFactory implements DispatcherFactory
+class FluidLsDispatcherFactory implements DispatcherFactory
 {
     /**
      * @var LoggerInterface
@@ -83,8 +83,8 @@ class AcmeLsDispatcherFactory implements DispatcherFactory
         return new MiddlewareDispatcher(
             new ErrorHandlingMiddleware($this->logger),
             new InitializeMiddleware($handlers, $eventDispatcher, [
-                'name' => 'acme',
-                'version' => '1',
+                'name' => 'fluid-ide-companion',
+                'version' => ExtensionManagementUtility::getExtensionVersion('ide_companion'),
             ]),
             new ShutdownMiddleware($eventDispatcher),
             new ResponseHandlingMiddleware($responseWatcher),

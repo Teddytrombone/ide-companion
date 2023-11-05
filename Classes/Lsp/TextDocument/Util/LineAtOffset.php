@@ -6,6 +6,9 @@ use OutOfBoundsException;
 use RuntimeException;
 use Teddytrombone\IdeCompanion\Lsp\TextDocument\ByteOffset;
 
+/**
+ * Taken from phpactor/phpactor
+ */
 final class LineAtOffset
 {
     public function __invoke(string $text, int $byteOffset): string

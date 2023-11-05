@@ -13,10 +13,3 @@ services:
         command: "idecompanion:lsp"
         schedulable: false
         description: "Runs LSP server"
-
-  Teddytrombone\IdeCompanion\Command\TemplateParserTestCommand:
-    tags:
-      - name: "console.command"
-        command: "idecompanion:test"
-        schedulable: false
-        description: "Runs tests"

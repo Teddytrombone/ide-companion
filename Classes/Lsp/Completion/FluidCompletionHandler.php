@@ -4,18 +4,14 @@ namespace Teddytrombone\IdeCompanion\Lsp\Completion;
 
 use Amp\CancellationToken;
 use Amp\Promise;
-use Amp\Success;
-use Generator;
 use Phpactor\LanguageServer\Core\Handler\Handler;
 use Phpactor\LanguageServerProtocol\ServerCapabilities;
-use Phpactor\LanguageServerProtocol\TextDocumentSyncKind;
 use Phpactor\LanguageServer\Core\Handler\CanRegisterCapabilities;
 use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\LanguageServerProtocol\CompletionItem;
 use Phpactor\LanguageServerProtocol\CompletionItemKind;
 use Phpactor\LanguageServerProtocol\CompletionOptions;
 use Phpactor\LanguageServerProtocol\CompletionParams;
-use Phpactor\LanguageServerProtocol\CompletionTriggerKind;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use Teddytrombone\IdeCompanion\Lsp\Converter\PositionConverter;
 use Teddytrombone\IdeCompanion\Parser\CompletionParser;
@@ -88,30 +84,8 @@ class FluidCompletionHandler implements Handler, CanRegisterCapabilities
                     }
                     break;
             }
-            /*
-            foreach ($namespacedTags as $namespace => $tags) {
-                if ($completionParams->context->triggerKind === CompletionTriggerKind::TRIGGER_CHARACTER) {
-                    foreach ($tags as $ta => $tagConfig) {
-                        $completionItems[] = new CompletionItem(
-                            $namespace . ':' . $ta,
-                            CompletionItemKind::FUNCTION,
-                            null,
-                            $tagConfig['description'],
-                        );
-                    }
-                }
-                yield \Amp\delay(1);
-                try {
-                    $cancellation->throwIfRequested();
-                } catch (\Amp\CancelledException $cancelled) {
-                    break;
-                }
-            }
-*/
             return $completionItems ?? [];
         });
-        //        file_put_contents('file.txt', print_r([$doc, $completionParams], true));
-        //      return new Success("Test");
     }
 
     protected function filterTags($namespacedTags, ParsedTagResult $result)
@@ -142,6 +116,6 @@ class FluidCompletionHandler implements Handler, CanRegisterCapabilities
 
     public function registerCapabiltiies(ServerCapabilities $capabilities): void
     {
-        $capabilities->completionProvider = new CompletionOptions(['<', ':', '{']);
+        $capabilities->completionProvider = new CompletionOptions(['<', '{', '(', ' ']);
     }
 }

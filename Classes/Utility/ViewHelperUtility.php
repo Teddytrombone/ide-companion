@@ -3,7 +3,6 @@
 namespace Teddytrombone\IdeCompanion\Utility;
 
 use phpDocumentor\Reflection\DocBlockFactory;
-use phpDocumentor\Reflection\Types\Context;
 use phpDocumentor\Reflection\Types\ContextFactory;
 use ReflectionClass;
 use TYPO3Fluid\Fluid\Core\ViewHelper\ViewHelperInterface;
