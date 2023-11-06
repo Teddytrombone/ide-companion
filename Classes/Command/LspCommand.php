@@ -10,7 +10,6 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Phpactor\LanguageServer\LanguageServerBuilder;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
-use Psr\Log\NullLogger;
 use Teddytrombone\IdeCompanion\Lsp\LanguageServer\FluidLsDispatcherFactory;
 
 class LspCommand extends Command
