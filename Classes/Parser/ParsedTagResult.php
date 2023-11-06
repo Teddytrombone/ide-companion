@@ -35,6 +35,11 @@ class ParsedTagResult
      */
     protected $status = self::STATUS_NO_FLUID_TAG;
 
+    /**
+     * @var bool
+     */
+    protected $shorthand = false;
+
     public function getNamespace(): ?string
     {
         return $this->namespace;
@@ -82,5 +87,21 @@ class ParsedTagResult
     {
         $this->status = $status;
         return $this;
+    }
+
+    public function isShorthand(): bool
+    {
+        return $this->shorthand;
+    }
+
+    public function setIsShorthand(bool $shorthand): self
+    {
+        $this->shorthand = $shorthand;
+        return $this;
+    }
+
+    public function setIsShorthandFromString(string $value): self
+    {
+        return $this->setIsShorthand(substr($value, 0, 1) === '{');
     }
 }

@@ -118,7 +118,9 @@ class CompletionParser
                     return $ret;
                 }
             }
+
             return $ret
+                ->setIsShorthandFromString($match[0])
                 ->setStatus(($match[2] ?? null) === null ? ParsedTagResult::STATUS_NAMESPACE : ParsedTagResult::STATUS_TAG)
                 ->setNamespace($match[1] ?? null)
                 ->setTag($match[3] ?? null);
@@ -127,6 +129,7 @@ class CompletionParser
                 return $ret->setStatus(ParsedTagResult::STATUS_INSIDE_ATTRIBUTE);
             }
             return $ret
+                ->setIsShorthandFromString($match[0])
                 ->setStatus(ParsedTagResult::STATUS_ATTRIBUTE)
                 ->setNamespace($match[1])
                 ->setTag($match[3]);
@@ -141,12 +144,14 @@ class CompletionParser
             } while ($currentMatch);
             if (preg_match(self::PATTERN_VIEWHELPER_SHORHANDSYNTAX_NOT_OPENED, $lastMatch[0], $innerMatch)) {
                 return $ret
+                    ->setIsShorthandFromString($match[0])
                     ->setStatus(($innerMatch[2] ?? null) === null ? ParsedTagResult::STATUS_NAMESPACE : ParsedTagResult::STATUS_TAG)
                     ->setNamespace($innerMatch[1])
                     ->setTag($innerMatch[3] ?? null);
             }
             if (preg_match(self::PATTERN_VIEWHELPER_SHORHANDSYNTAX_CHAINED_NOT_OPENED, $lastMatch[0], $innerMatch)) {
                 return $ret
+                    ->setIsShorthandFromString($match[0])
                     ->setStatus(($innerMatch[2] ?? null) === null ? ParsedTagResult::STATUS_NAMESPACE : ParsedTagResult::STATUS_TAG)
                     ->setNamespace($innerMatch[1] ?? null)
                     ->setTag($innerMatch[3] ?? null);
@@ -155,6 +160,7 @@ class CompletionParser
                 return $ret->setStatus(ParsedTagResult::STATUS_INSIDE_ATTRIBUTE);
             }
             return $ret
+                ->setIsShorthandFromString($match[0])
                 ->setStatus(ParsedTagResult::STATUS_ATTRIBUTE)
                 ->setNamespace($lastMatch[1])
                 ->setTag($lastMatch[3]);

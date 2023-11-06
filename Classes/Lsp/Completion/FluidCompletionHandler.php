@@ -5,6 +5,7 @@ namespace Teddytrombone\IdeCompanion\Lsp\Completion;
 use Amp\CancellationToken;
 use Amp\Promise;
 use Generator;
+use Phpactor\LanguageServerProtocol\InsertTextFormat;
 use Phpactor\LanguageServer\Core\Handler\Handler;
 use Phpactor\LanguageServerProtocol\ServerCapabilities;
 use Phpactor\LanguageServer\Core\Handler\CanRegisterCapabilities;
@@ -15,6 +16,8 @@ use Phpactor\LanguageServerProtocol\CompletionOptions;
 use Phpactor\LanguageServerProtocol\CompletionParams;
 use Phpactor\LanguageServerProtocol\DefinitionParams;
 use Phpactor\LanguageServerProtocol\Location;
+use Phpactor\LanguageServerProtocol\MarkupContent;
+use Phpactor\LanguageServerProtocol\MarkupKind;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use Teddytrombone\IdeCompanion\Lsp\Converter\PositionConverter;
 use Teddytrombone\IdeCompanion\Parser\CompletionParser;
@@ -23,6 +26,15 @@ use Teddytrombone\IdeCompanion\Utility\ViewHelperUtility;
 
 class FluidCompletionHandler implements Handler, CanRegisterCapabilities
 {
+    private const INSERT_TAG = '%1$s:%2$s %3$s></%1$s:%2$s>';
+    private const INSERT_SHORTHAND = '{%s:%s(%s)}';
+
+    private const INSERT_TAG_ATTRIBUTE = '%s="%s"';
+    private const INSERT_SHORTHAND_ATTRIBUTE = '%s: %s';
+
+    private const INSERT_TAG_SEPARATOR = ' ';
+    private const INSERT_SHORTHAND_SEPARATOR = ', ';
+
     /**
      * @var Workspace
      */
@@ -38,8 +50,12 @@ class FluidCompletionHandler implements Handler, CanRegisterCapabilities
      */
     private $completionParser;
 
-    public function __construct(Workspace $workspace, ?ViewHelperUtility $viewHelperUtility = null, ?CompletionParser $completionParser = null)
-    {
+
+    public function __construct(
+        Workspace $workspace,
+        ?ViewHelperUtility $viewHelperUtility = null,
+        ?CompletionParser $completionParser = null
+    ) {
         $this->workspace = $workspace;
         $this->viewHelperUtility = $viewHelperUtility ?? GeneralUtility::makeInstance(ViewHelperUtility::class);
         $this->completionParser = $completionParser ?? GeneralUtility::makeInstance(CompletionParser::class);
@@ -143,12 +159,38 @@ class FluidCompletionHandler implements Handler, CanRegisterCapabilities
                 if (!$anyTag && !str_starts_with($tag, $result->getTag() ?? '')) {
                     continue;
                 }
+                $arguments = [];
+                $first = true;
+                /** @var \TYPO3Fluid\Fluid\Core\ViewHelper\ArgumentDefinition $argument */
+                foreach ($tagConfig['arguments'] ?? [] as $argument) {
+                    if ($argument->isRequired()) {
+
+                        $arguments[] = sprintf(
+                            $result->isShorthand() ? self::INSERT_SHORTHAND_ATTRIBUTE : self::INSERT_TAG_ATTRIBUTE,
+                            $argument->getName(),
+                            $first ? '$0' : ''
+                        );
+                        $first = false;
+                    }
+                }
+                $insertText = sprintf(
+                    $result->isShorthand() ? self::INSERT_SHORTHAND : self::INSERT_TAG,
+                    $namespace,
+                    $tag,
+                    count($arguments) > 0 ? implode($result->isShorthand() ? self::INSERT_SHORTHAND_SEPARATOR : self::INSERT_TAG_SEPARATOR, $arguments) : '$0'
+                );
                 yield new CompletionItem(
                     $namespace . ':' . $tag,
                     CompletionItemKind::FUNCTION,
                     null,
                     null,
-                    $tagConfig['description'],
+                    new MarkupContent(MarkupKind::MARKDOWN, $tagConfig['description']),
+                    null,
+                    null,
+                    null,
+                    null,
+                    $insertText,
+                    InsertTextFormat::SNIPPET
                 );
             }
         }

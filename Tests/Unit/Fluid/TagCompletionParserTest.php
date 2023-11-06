@@ -303,7 +303,7 @@ class TagCompletionParserTest extends UnitTestCase
      * @test
      * @return void
      */
-    public function testViewHelperTags(string $string, int $position, int $status, ?string $namespace, ?string $tag): void
+    public function testViewHelperTags(string $string, int $position, int $status, ?string $namespace, ?string $tag, bool $isShorthand): void
     {
         $parser = GeneralUtility::makeInstance(CompletionParser::class);
         $allowedNamespaces = ['f', 'bcgeneric'];
@@ -311,6 +311,10 @@ class TagCompletionParserTest extends UnitTestCase
         $this->assertEquals($status, $result->getStatus());
         $this->assertEquals($namespace, $result->getNamespace());
         $this->assertEquals($tag, $result->getTag());
+        $this->assertEquals(
+            $isShorthand && in_array($result->getStatus(), [ParsedTagResult::STATUS_NO_FLUID_TAG, ParsedTagResult::STATUS_INSIDE_ATTRIBUTE]) === false,
+            $result->isShorthand()
+        );
     }
 
     /**
@@ -328,36 +332,37 @@ class TagCompletionParserTest extends UnitTestCase
         $this->assertEquals('translate', $result->getTag());
     }
 
-    protected function simpleTagProvider(): array
+    public function simpleTagProvider(): array
     {
         return array_merge(
-            $this->getTestsWithTag($this->simpleTag, $this->simpleTagTests),
-            $this->getTestsWithTag($this->simpleShorthandTag, $this->simpleTagTests)
+            $this->getTestsWithTag($this->simpleTag, false, $this->simpleTagTests),
+            $this->getTestsWithTag($this->simpleShorthandTag, true, $this->simpleTagTests)
         );
     }
 
-    protected function longerTagProvider(): array
+    public function longerTagProvider(): array
     {
         return array_merge(
-            $this->getTestsWithTag($this->tagWithLongerNamespaceAndTag, $this->longerTagTests),
-            $this->getTestsWithTag($this->shorthandTagWithLongerNamespaceAndTag, $this->longerTagTests)
+            $this->getTestsWithTag($this->tagWithLongerNamespaceAndTag, false, $this->longerTagTests),
+            $this->getTestsWithTag($this->shorthandTagWithLongerNamespaceAndTag, true, $this->longerTagTests)
         );
     }
 
-    protected function complexTagProvider(): array
+    public function complexTagProvider(): array
     {
-        return $this->getTestsWithTag($this->complexShorthandTag, $this->complexTagTests);
+        return $this->getTestsWithTag($this->complexShorthandTag, true, $this->complexTagTests);
     }
 
-    protected function getTestsWithTag(string $tag, array $tests): array
+    protected function getTestsWithTag(string $tag, bool $isShorthand, array $tests): array
     {
-        return array_map(function ($element) use ($tag) {
+        return array_map(function ($element) use ($tag, $isShorthand) {
             return [
                 $tag,
                 $element['position'],
                 $element['status'],
                 $element['namespace'] ?? null,
                 $element['tag'] ?? null,
+                $isShorthand,
             ];
         }, $tests);
     }
