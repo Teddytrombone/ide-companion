@@ -5,8 +5,7 @@ namespace Teddytrombone\IdeCompanion\Lsp\Converter;
 use Phpactor\LanguageServerProtocol\Position;
 use Teddytrombone\IdeCompanion\Lsp\TextDocument\ByteOffset;
 use Teddytrombone\IdeCompanion\Lsp\TextDocument\LineCol;
-use Teddytrombone\IdeCompanion\Lsp\TextDocument\Util\LineAtOffset; 
-
+use Teddytrombone\IdeCompanion\Lsp\TextDocument\Util\LineAtOffset;
 
 class PositionConverter
 {

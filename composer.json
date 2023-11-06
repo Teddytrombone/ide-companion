@@ -30,7 +30,9 @@
     }
   },
   "require-dev": {
-    "typo3/testing-framework": "^7"
+    "typo3/testing-framework": "^7",
+    "doctrine/rst-parser": "^0.5.5",
+    "league/html-to-markdown": "^5.1"
   },
   "autoload-dev": {
     "psr-4": {

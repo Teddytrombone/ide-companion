@@ -7,7 +7,6 @@ namespace Teddytrombone\IdeCompanion\Parser;
 use TYPO3Fluid\Fluid\Core\Parser\Patterns;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
-
 /**
  *
  * Parses for Fluid tags with regex patterns taken from TYPO3Fluid and adapted so it works with partial fluid tags
@@ -17,7 +16,6 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 class CompletionParser
 {
-
     private const SUBPATTERN_VIEWHELPER = '[a-zA-Z0-9\\.]';
 
     private const PATTERN_TAG_START = '/
@@ -124,7 +122,7 @@ class CompletionParser
                 ->setStatus(($match[2] ?? null) === null ? ParsedTagResult::STATUS_NAMESPACE : ParsedTagResult::STATUS_TAG)
                 ->setNamespace($match[1] ?? null)
                 ->setTag($match[3] ?? null);
-        } else if (preg_match(self::PATTERN_VIEWHELPER_TAG_WITH_ATTRIBUTES_NOT_CLOSED, $lastSplit, $match)) {
+        } elseif (preg_match(self::PATTERN_VIEWHELPER_TAG_WITH_ATTRIBUTES_NOT_CLOSED, $lastSplit, $match)) {
             if (preg_match(self::PATTERN_VIEWHELPER_COMPLETION_NOT_NEEDS_ATTRIBUTES, $match[0], $innerMatch)) {
                 return $ret->setStatus(ParsedTagResult::STATUS_INSIDE_ATTRIBUTE);
             }
@@ -132,7 +130,7 @@ class CompletionParser
                 ->setStatus(ParsedTagResult::STATUS_ATTRIBUTE)
                 ->setNamespace($match[1])
                 ->setTag($match[3]);
-        } else if (preg_match(self::PATTERN_VIEWHELPER_SHORHANDSYNTAX_WITH_ATTRIBUTES_NOT_CLOSED, $lastSection, $match)) {
+        } elseif (preg_match(self::PATTERN_VIEWHELPER_SHORHANDSYNTAX_WITH_ATTRIBUTES_NOT_CLOSED, $lastSection, $match)) {
             $lastMatch = $match;
             $innerMatch = [];
             do {

@@ -20,7 +20,6 @@ use phpDocumentor\Reflection\DocBlockFactoryInterface;
 
 class ViewHelperUtility
 {
-
     protected $globalNamespaces = [];
 
     /**
@@ -127,7 +126,7 @@ class ViewHelperUtility
         $docComment = $reflectionClass->getDocComment();
         if ($docComment) {
             $parsed = $this->docBlockFactory->create($docComment, $this->contextFactory->createFromReflector($reflectionClass));
-            $description = $parsed->getDescription();
+            $description = $parsed->getDescription()->render();
             if (!empty($description)) {
                 $description = $this->rstParser->parse($parsed->getDescription())->render();
                 $description = strip_tags($this->htmlConverter->convert($description));

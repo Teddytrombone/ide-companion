@@ -1,9 +1,11 @@
 # ide-companion
+
 LSP for TYPO3 Fluid and more
 
 Needs to be installed as TYPO3 extension either by using composer mode installation (not tested at the moment) or via executing `composer install` in the Resources/Private sub directory
 
 Needs an LSP client, for neovim use something like
+
 ```lua
 vim.api.nvim_create_autocmd({ "FileType" }, {
 	pattern = { "html" },
@@ -17,4 +19,7 @@ vim.api.nvim_create_autocmd({ "FileType" }, {
 	group = vim.api.nvim_create_augroup("typo3", { clear = true }),
 })
 ```
-This will hopefully be simplyfied in the future ;-)
+
+For vscode you can use [torokati44.glspc](torokati44/vscode-glspc) as generic LSP client.
+
+This will hopefully be simplified in the future ;-)

@@ -4,6 +4,7 @@ namespace Teddytrombone\IdeCompanion\Lsp\Completion;
 
 use Amp\CancellationToken;
 use Amp\Promise;
+use Generator;
 use Phpactor\LanguageServer\Core\Handler\Handler;
 use Phpactor\LanguageServerProtocol\ServerCapabilities;
 use Phpactor\LanguageServer\Core\Handler\CanRegisterCapabilities;
@@ -12,11 +13,8 @@ use Phpactor\LanguageServerProtocol\CompletionItem;
 use Phpactor\LanguageServerProtocol\CompletionItemKind;
 use Phpactor\LanguageServerProtocol\CompletionOptions;
 use Phpactor\LanguageServerProtocol\CompletionParams;
-use Phpactor\LanguageServerProtocol\DefinitionOptions;
 use Phpactor\LanguageServerProtocol\DefinitionParams;
 use Phpactor\LanguageServerProtocol\Location;
-use Phpactor\LanguageServerProtocol\Position;
-use Phpactor\LanguageServerProtocol\Range;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use Teddytrombone\IdeCompanion\Lsp\Converter\PositionConverter;
 use Teddytrombone\IdeCompanion\Parser\CompletionParser;
@@ -92,7 +90,7 @@ class FluidCompletionHandler implements Handler, CanRegisterCapabilities
             switch ($result->getStatus()) {
                 case ParsedTagResult::STATUS_NAMESPACE:
                 case ParsedTagResult::STATUS_TAG:
-                    foreach ($this->filterTags($namespacedTags, $result, $cancellation) as $item) {
+                    foreach ($this->filterTags($namespacedTags, $result) as $item) {
                         $completionItems[] = $item;
                         yield \Amp\delay(1);
                         if ($cancellation->isRequested()) {
@@ -122,11 +120,15 @@ class FluidCompletionHandler implements Handler, CanRegisterCapabilities
                     }
                     break;
             }
-            return $completionItems ?? [];
+            return $completionItems;
         });
     }
-
-    protected function filterTags($namespacedTags, ParsedTagResult $result)
+    /**
+     * @param array<string,array<int,string>> $namespacedTags
+     * @param ParsedTagResult $result
+     * @return Generator
+     */
+    protected function filterTags(array $namespacedTags, ParsedTagResult $result): Generator
     {
         $namespaceEquals = $result->getStatus() === ParsedTagResult::STATUS_TAG;
         $anyTag = empty($result->getTag());
