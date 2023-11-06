@@ -26,7 +26,6 @@ use Phpactor\LanguageServer\Listener\ServiceListener;
 use Phpactor\LanguageServer\Core\Server\RpcClient\JsonRpcClient;
 use Phpactor\LanguageServer\Core\Service\ServiceManager;
 use Phpactor\LanguageServer\Core\Service\ServiceProviders;
-use Phpactor\LanguageServer\Example\Service\PingProvider;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\LanguageServer\Core\Server\ResponseWatcher\DeferredResponseWatcher;
 use Phpactor\LanguageServer\Core\Server\Transmitter\MessageTransmitter;
@@ -53,9 +52,7 @@ class FluidLsDispatcherFactory implements DispatcherFactory
         $responseWatcher = new DeferredResponseWatcher();
         $clientApi = new ClientApi(new JsonRpcClient($transmitter, $responseWatcher));
 
-        $serviceProviders = new ServiceProviders(
-            new PingProvider($clientApi)
-        );
+        $serviceProviders = new ServiceProviders();
 
         $serviceManager = new ServiceManager($serviceProviders, $this->logger);
         $workspace = new Workspace();

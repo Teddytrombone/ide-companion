@@ -8,6 +8,7 @@ use Doctrine\RST\Parser;
 use League\HTMLToMarkdown\HtmlConverter;
 use Phpactor\LanguageServerProtocol\Position;
 use Phpactor\LanguageServerProtocol\Range;
+use TYPO3\CMS\Fluid\Core\Rendering\RenderingContextFactory;
 use phpDocumentor\Reflection\DocBlockFactory;
 use phpDocumentor\Reflection\Types\ContextFactory;
 use ReflectionClass;
@@ -62,7 +63,7 @@ class ViewHelperUtility
      */
     protected function loadNamespacesFromSource(string $content): array
     {
-        $renderingContext = GeneralUtility::makeInstance(RenderingContext::class);
+        $renderingContext = GeneralUtility::makeInstance(RenderingContextFactory::class)->create();
         $renderingContext->getTemplateParser()->parse($content);
         return $renderingContext->getViewHelperResolver()->getNamespaces();
     }
@@ -109,8 +110,13 @@ class ViewHelperUtility
      */
     protected function getArgumentDefinition(ReflectionClass $reflectionClass): array
     {
-        $viewHelper = $reflectionClass->newInstanceWithoutConstructor();
-        return $viewHelper->prepareArguments();
+        try {
+            $viewHelper = $reflectionClass->newInstanceWithoutConstructor();
+            return $viewHelper->prepareArguments();
+        } catch (\Exception $ex) {
+            //
+        }
+        return [];
     }
 
     /**
