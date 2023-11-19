@@ -14,6 +14,8 @@ class ParsedTagResult
 
     public const STATUS_INSIDE_ATTRIBUTE = 4;
 
+    public const STATUS_END_TAG = 99;
+
 
     /**
      * @var ?string

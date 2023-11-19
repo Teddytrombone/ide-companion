@@ -27,6 +27,16 @@ class CompletionParser
             )?
         $/xs';
 
+    private const PATTERN_TAG_CLOSING = '/
+        <\/
+            (' . self::SUBPATTERN_VIEWHELPER . '*)
+            (?:
+                (:)
+                (' . self::SUBPATTERN_VIEWHELPER . '*)
+            )?
+        >?
+        $/xs';
+
 
     private const PATTERN_VIEWHELPER_TAG_WITH_ATTRIBUTES_NOT_CLOSED = '/
         <
@@ -164,6 +174,11 @@ class CompletionParser
                 ->setStatus(ParsedTagResult::STATUS_ATTRIBUTE)
                 ->setNamespace($lastMatch[1])
                 ->setTag($lastMatch[3]);
+        } elseif (preg_match(self::PATTERN_TAG_CLOSING, $lastSection, $match)) {
+            return $ret
+                ->setStatus(ParsedTagResult::STATUS_END_TAG)
+                ->setNamespace($match[1])
+                ->setTag($match[3] ?? null);
         }
         return $ret;
     }

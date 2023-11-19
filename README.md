@@ -1,6 +1,20 @@
-# ide-companion
+# IDE companion for TYPO3
 
-LSP for TYPO3 Fluid and more
+LSP implementations for TYPO3 (Fluid and more)
+
+## What this want's to be
+* LSP implementation for a specific TYPO3 installation which is done by installing this as an extension to the TYPO3 installation ;-)
+* LSP implementation for TypoScript as far as the TYPO3 built in TypoScript parser allows it
+* Maybe resolving of EXT:xxx paths in all kinds of files (via LSP or an IDEs client plugin still has to be resesearched)
+
+
+## What this will not be
+
+* Standalone LSP for Fluid or TypoScript
+* Linter or formatter for Fluid or TypoScript
+
+
+## Installation (wip)
 
 Needs to be installed as TYPO3 extension either by using composer mode installation (not tested at the moment) or via executing `composer install` in the Resources/Private sub directory
 

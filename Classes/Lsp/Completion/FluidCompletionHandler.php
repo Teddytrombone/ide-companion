@@ -26,7 +26,7 @@ use Teddytrombone\IdeCompanion\Utility\ViewHelperUtility;
 
 class FluidCompletionHandler implements Handler, CanRegisterCapabilities
 {
-    private const INSERT_TAG = '%1$s:%2$s %3$s></%1$s:%2$s>';
+    private const INSERT_TAG = '%1$s:%2$s %3$s';
     private const INSERT_SHORTHAND = '{%s:%s(%s)}';
 
     private const INSERT_TAG_ATTRIBUTE = '%s="%s"';
@@ -80,7 +80,7 @@ class FluidCompletionHandler implements Handler, CanRegisterCapabilities
             $result = $this->completionParser->parseForCompleteFluidTag($textDocument->text, $offset->toInt(), array_keys($namespacedTags));
 
             if (
-                in_array($result->getStatus(), [ParsedTagResult::STATUS_TAG, ParsedTagResult::STATUS_ATTRIBUTE])
+                in_array($result->getStatus(), [ParsedTagResult::STATUS_TAG, ParsedTagResult::STATUS_ATTRIBUTE, ParsedTagResult::STATUS_END_TAG])
             ) {
                 $file = $namespacedTags[$result->getNamespace()][$result->getTag()]['file'] ?? null;
                 $range = $namespacedTags[$result->getNamespace()][$result->getTag()]['range'] ?? null;
@@ -102,6 +102,7 @@ class FluidCompletionHandler implements Handler, CanRegisterCapabilities
 
             $namespacedTags = $this->viewHelperUtility->getPossibleTagsFromSource($textDocument->text);
             $result = $this->completionParser->parseForFluidTag($textDocument->text, $offset->toInt(), array_keys($namespacedTags));
+
 
             switch ($result->getStatus()) {
                 case ParsedTagResult::STATUS_NAMESPACE:

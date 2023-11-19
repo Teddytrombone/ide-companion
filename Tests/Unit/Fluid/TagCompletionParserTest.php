@@ -17,6 +17,7 @@ class TagCompletionParserTest extends UnitTestCase
     //                               0123456789111111111222222
     //                               ----------012345678901234
 
+
     protected $simpleTagTests = [
         [
             'position' => 0,
@@ -85,6 +86,62 @@ class TagCompletionParserTest extends UnitTestCase
             'tag' => null,
         ],
     ];
+
+    protected $endTag = '</bcgeneric:svg.icon>';
+    //                   012345678911111111122
+    //                   ----------01234567890
+
+    protected $endTagTests = [
+        [
+            'position' => 0,
+            'status' => ParsedTagResult::STATUS_NO_FLUID_TAG,
+            'namespace' => null,
+            'tag' => null,
+        ],
+        [
+            'position' => 1,
+            'status' => ParsedTagResult::STATUS_NAMESPACE,
+            'namespace' => null,
+            'tag' => null,
+        ],
+        [
+            'position' => 2,
+            'status' => ParsedTagResult::STATUS_END_TAG,
+            'namespace' => null,
+            'tag' => null,
+        ],
+        [
+            'position' => 3,
+            'status' => ParsedTagResult::STATUS_END_TAG,
+            'namespace' => 'b',
+            'tag' => null,
+        ],
+        [
+            'position' => 8,
+            'status' => ParsedTagResult::STATUS_END_TAG,
+            'namespace' => 'bcgene',
+            'tag' => null,
+        ],
+        [
+            'position' => 11,
+            'status' => ParsedTagResult::STATUS_END_TAG,
+            'namespace' => 'bcgeneric',
+            'tag' => null,
+        ],
+        [
+            'position' => 20,
+            'status' => ParsedTagResult::STATUS_END_TAG,
+            'namespace' => 'bcgeneric',
+            'tag' => 'svg.icon',
+        ],
+        [
+            'position' => 21,
+            'status' => ParsedTagResult::STATUS_END_TAG,
+            'namespace' => 'bcgeneric',
+            'tag' => 'svg.icon',
+        ],
+    ];
+
 
     protected $tagWithLongerNamespaceAndTag = '<bcgeneric:svg.icon icon= "foobar" />';
     //                                         0123456789111111111122222222223333333
@@ -300,6 +357,7 @@ class TagCompletionParserTest extends UnitTestCase
      * @dataProvider simpleTagProvider
      * @dataProvider longerTagProvider
      * @dataProvider complexTagProvider
+     * @dataProvider endTagProvider
      * @test
      * @return void
      */
@@ -351,6 +409,11 @@ class TagCompletionParserTest extends UnitTestCase
     public function complexTagProvider(): array
     {
         return $this->getTestsWithTag($this->complexShorthandTag, true, $this->complexTagTests);
+    }
+
+    public function endTagProvider(): array
+    {
+        return $this->getTestsWithTag($this->endTag, false, $this->endTagTests);
     }
 
     protected function getTestsWithTag(string $tag, bool $isShorthand, array $tests): array
