@@ -43,7 +43,7 @@ class CompletionParser
             (' . self::SUBPATTERN_VIEWHELPER . '+) # Namespace
             (:)
             (' . self::SUBPATTERN_VIEWHELPER . '+) # ViewHelper
-            \s+                                
+            \s+
             ([^>]*)
         $/xs';
 
@@ -57,7 +57,7 @@ class CompletionParser
 		)?                           #
     $/xs';
 
-    private const PATTERN_VIEWHELPER_SHORHANDSYNTAX_WITH_ATTRIBUTES_NOT_CLOSED = '/        
+    private const PATTERN_VIEWHELPER_SHORHANDSYNTAX_WITH_ATTRIBUTES_NOT_CLOSED = '/
         \{
             (?:[a-zA-Z0-9\|\->_:=,.()*+\^\/\%\s]+[\|\->:=,.()*+\^\/\%\s]+)*     # Various characters including math operations and spaces
             (' . self::SUBPATTERN_VIEWHELPER . '+) # Namespace
@@ -67,7 +67,7 @@ class CompletionParser
         (.*)
         $/xs';
 
-    private const PATTERN_VIEWHELPER_SHORHANDSYNTAX_NOT_OPENED = '/        
+    private const PATTERN_VIEWHELPER_SHORHANDSYNTAX_NOT_OPENED = '/
         \{
             [a-zA-Z0-9\|\->_:=,.()*+\^\/\%\s]*     # Various characters including math operations and spaces
             (' . self::SUBPATTERN_VIEWHELPER . '+) # Namespace
@@ -75,7 +75,7 @@ class CompletionParser
             (' . self::SUBPATTERN_VIEWHELPER . '+) # ViewHelper
         $/xs';
 
-    private const PATTERN_VIEWHELPER_SHORHANDSYNTAX_CHAINED_NOT_OPENED = '/        
+    private const PATTERN_VIEWHELPER_SHORHANDSYNTAX_CHAINED_NOT_OPENED = '/
         \{
             [a-zA-Z0-9\|\->_:=,.()*+\^\/\%\s]*      # Various characters including math operations and spaces
             (?:\s*->\s*)
@@ -117,6 +117,7 @@ class CompletionParser
         if ($lastSection === null) {
             $lastSection = $lastSplit;
         }
+
         if (preg_match(self::PATTERN_TAG_START, $lastSplit, $match)) {
             $currentNamespace = $match[1] ?? null;
             $foundNamespaces = [];
@@ -158,15 +159,13 @@ class CompletionParser
                     ->setStatus(($innerMatch[2] ?? null) === null ? ParsedTagResult::STATUS_NAMESPACE : ParsedTagResult::STATUS_TAG)
                     ->setNamespace($innerMatch[1])
                     ->setTag($innerMatch[3] ?? null);
-            }
-            if (preg_match(self::PATTERN_VIEWHELPER_SHORHANDSYNTAX_CHAINED_NOT_OPENED, $lastMatch[0], $innerMatch)) {
+            } elseif (preg_match(self::PATTERN_VIEWHELPER_SHORHANDSYNTAX_CHAINED_NOT_OPENED, $lastMatch[0], $innerMatch)) {
                 return $ret
                     ->setIsShorthandFromString($match[0])
                     ->setStatus(($innerMatch[2] ?? null) === null ? ParsedTagResult::STATUS_NAMESPACE : ParsedTagResult::STATUS_TAG)
                     ->setNamespace($innerMatch[1] ?? null)
                     ->setTag($innerMatch[3] ?? null);
-            }
-            if (preg_match(self::PATTERN_VIEWHELPER_SHORTHANDSYNTAX_COMPLETION_NOT_NEEDS_ATTRIBUTES, $lastMatch[0], $innerMatch)) {
+            } elseif (preg_match(self::PATTERN_VIEWHELPER_SHORTHANDSYNTAX_COMPLETION_NOT_NEEDS_ATTRIBUTES, $lastMatch[0], $innerMatch)) {
                 return $ret->setStatus(ParsedTagResult::STATUS_INSIDE_ATTRIBUTE);
             }
             return $ret
@@ -177,6 +176,18 @@ class CompletionParser
         } elseif (preg_match(self::PATTERN_TAG_CLOSING, $lastSection, $match)) {
             return $ret
                 ->setStatus(ParsedTagResult::STATUS_END_TAG)
+                ->setNamespace($match[1])
+                ->setTag($match[3] ?? null);
+        } elseif (preg_match(self::PATTERN_VIEWHELPER_SHORHANDSYNTAX_CHAINED_NOT_OPENED, $lastSection, $match)) {
+            return $ret
+                ->setIsShorthandFromString($match[0])
+                ->setStatus(($match[2] ?? null) === null ? ParsedTagResult::STATUS_NAMESPACE : ParsedTagResult::STATUS_TAG)
+                ->setNamespace($match[1] ?? null)
+                ->setTag($match[3] ?? null);
+        } elseif (preg_match(self::PATTERN_VIEWHELPER_SHORHANDSYNTAX_NOT_OPENED, $lastSection, $match)) {
+            return $ret
+                ->setIsShorthandFromString($match[0])
+                ->setStatus(($match[2] ?? null) === null ? ParsedTagResult::STATUS_NAMESPACE : ParsedTagResult::STATUS_TAG)
                 ->setNamespace($match[1])
                 ->setTag($match[3] ?? null);
         }

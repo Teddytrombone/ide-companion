@@ -34,6 +34,8 @@ use Phpactor\LanguageServer\Middleware\ShutdownMiddleware;
 use Psr\Log\LoggerInterface;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use Teddytrombone\IdeCompanion\Lsp\Completion\FluidCompletionHandler;
+use Teddytrombone\IdeCompanion\Utility\LoggingUtility;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class FluidLsDispatcherFactory implements DispatcherFactory
 {
@@ -45,6 +47,7 @@ class FluidLsDispatcherFactory implements DispatcherFactory
     public function __construct(LoggerInterface $logger)
     {
         $this->logger = $logger;
+        GeneralUtility::makeInstance(LoggingUtility::class)->setLogger($logger);
     }
 
     public function create(MessageTransmitter $transmitter, InitializeParams $initializeParams): Dispatcher

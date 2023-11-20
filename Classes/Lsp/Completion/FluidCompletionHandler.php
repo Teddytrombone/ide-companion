@@ -22,12 +22,13 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 use Teddytrombone\IdeCompanion\Lsp\Converter\PositionConverter;
 use Teddytrombone\IdeCompanion\Parser\CompletionParser;
 use Teddytrombone\IdeCompanion\Parser\ParsedTagResult;
+use Teddytrombone\IdeCompanion\Utility\LoggingUtility;
 use Teddytrombone\IdeCompanion\Utility\ViewHelperUtility;
 
 class FluidCompletionHandler implements Handler, CanRegisterCapabilities
 {
     private const INSERT_TAG = '%1$s:%2$s %3$s';
-    private const INSERT_SHORTHAND = '{%s:%s(%s)}';
+    private const INSERT_SHORTHAND = '%s:%s(%s)';
 
     private const INSERT_TAG_ATTRIBUTE = '%s="%s"';
     private const INSERT_SHORTHAND_ATTRIBUTE = '%s: %s';
@@ -103,6 +104,11 @@ class FluidCompletionHandler implements Handler, CanRegisterCapabilities
             $namespacedTags = $this->viewHelperUtility->getPossibleTagsFromSource($textDocument->text);
             $result = $this->completionParser->parseForFluidTag($textDocument->text, $offset->toInt(), array_keys($namespacedTags));
 
+            GeneralUtility::makeInstance(LoggingUtility::class)->getLogger()->debug(print_r([
+                $params,
+                $textDocument->text,
+                $result
+            ], true));
 
             switch ($result->getStatus()) {
                 case ParsedTagResult::STATUS_NAMESPACE:

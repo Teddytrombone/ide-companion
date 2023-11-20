@@ -353,6 +353,61 @@ class TagCompletionParserTest extends UnitTestCase
         ],
     ];
 
+    protected $lessComplexShorthandTag = "{date -> f:format.date(format: 'd.m.Y')}";
+    //                                    0123456789111111111122222222223333333333
+    //                                    ----------012345678901234567890123456789
+
+    protected $lessComplexTagTests = [
+        [
+            'position' => 1,
+            'status' => ParsedTagResult::STATUS_NAMESPACE,
+            'namespace' => null,
+            'tag' => null,
+        ],
+        [
+            'position' => 2,
+            'status' => ParsedTagResult::STATUS_NO_FLUID_TAG,
+            'namespace' => null,
+            'tag' => null,
+        ],
+        [
+            'position' => 5,
+            'status' => ParsedTagResult::STATUS_NO_FLUID_TAG,
+            'namespace' => null,
+            'tag' => null,
+        ],
+        [
+            'position' => 6,
+            'status' => ParsedTagResult::STATUS_NO_FLUID_TAG,
+            'namespace' => null,
+            'tag' => null,
+        ],
+        [
+            'position' => 8,
+            'status' => ParsedTagResult::STATUS_NAMESPACE,
+            'namespace' => null,
+            'tag' => null,
+        ],
+        [
+            'position' => 10,
+            'status' => ParsedTagResult::STATUS_NAMESPACE,
+            'namespace' => 'f',
+            'tag' => null,
+        ],
+        [
+            'position' => 22,
+            'status' => ParsedTagResult::STATUS_TAG,
+            'namespace' => 'f',
+            'tag' => 'format.date',
+        ],
+        [
+            'position' => 23,
+            'status' => ParsedTagResult::STATUS_ATTRIBUTE,
+            'namespace' => 'f',
+            'tag' => 'format.date',
+        ],
+    ];
+
     /**
      * @dataProvider simpleTagProvider
      * @dataProvider longerTagProvider
@@ -408,7 +463,10 @@ class TagCompletionParserTest extends UnitTestCase
 
     public function complexTagProvider(): array
     {
-        return $this->getTestsWithTag($this->complexShorthandTag, true, $this->complexTagTests);
+        return array_merge(
+            $this->getTestsWithTag($this->lessComplexShorthandTag, true, $this->lessComplexTagTests),
+            $this->getTestsWithTag($this->complexShorthandTag, true, $this->complexTagTests)
+        );
     }
 
     public function endTagProvider(): array
