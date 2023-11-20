@@ -32,6 +32,7 @@ use Phpactor\LanguageServer\Core\Server\Transmitter\MessageTransmitter;
 use Phpactor\LanguageServer\Middleware\HandlerMiddleware;
 use Phpactor\LanguageServer\Middleware\ShutdownMiddleware;
 use Psr\Log\LoggerInterface;
+use Teddytrombone\IdeCompanion\Lsp\Completion\ExtensionPathCompletionHandler;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use Teddytrombone\IdeCompanion\Lsp\Completion\FluidCompletionHandler;
 use Teddytrombone\IdeCompanion\Utility\LoggingUtility;
@@ -66,6 +67,7 @@ class FluidLsDispatcherFactory implements DispatcherFactory
         );
 
         $handlers = new Handlers(
+            new ExtensionPathCompletionHandler($workspace),
             new FluidCompletionHandler($workspace),
             new TextDocumentHandler($eventDispatcher),
             new ServiceHandler($serviceManager, $clientApi),

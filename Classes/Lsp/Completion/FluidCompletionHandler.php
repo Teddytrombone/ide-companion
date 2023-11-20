@@ -146,6 +146,7 @@ class FluidCompletionHandler implements Handler, CanRegisterCapabilities
             return $completionItems;
         });
     }
+
     /**
      * @param array<string,array<int,string>> $namespacedTags
      * @param ParsedTagResult $result
