@@ -6,7 +6,6 @@ namespace Teddytrombone\IdeCompanion\Parser;
 
 use TYPO3Fluid\Fluid\Core\Parser\Patterns;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Utility\DebuggerUtility;
 
 /**
  *

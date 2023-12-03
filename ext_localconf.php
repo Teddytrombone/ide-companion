@@ -16,5 +16,17 @@ call_user_func(function ($packageKey) {
                 'logFile' => \TYPO3\CMS\Core\Core\Environment::getVarPath() . '/log/ide_companion.log'
             ],
         ],
+        \Psr\Log\LogLevel::NOTICE => [
+            // Add a SyslogWriter
+            \TYPO3\CMS\Core\Log\Writer\FileWriter::class => [
+                'logFile' => \TYPO3\CMS\Core\Core\Environment::getVarPath() . '/log/ide_companion_notice.log'
+            ],
+        ],
+        \Psr\Log\LogLevel::INFO => [
+            // Add a SyslogWriter
+            \TYPO3\CMS\Core\Log\Writer\FileWriter::class => [
+                'logFile' => \TYPO3\CMS\Core\Core\Environment::getVarPath() . '/log/ide_companion_info.log'
+            ],
+        ],
     ];
 }, 'ide_companion');

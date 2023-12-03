@@ -15,8 +15,10 @@ use ReflectionClass;
 use TYPO3Fluid\Fluid\Core\ViewHelper\ViewHelperInterface;
 use TYPO3\CMS\Core\Core\ClassLoadingInformation;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Fluid\Core\Rendering\RenderingContext;
 use phpDocumentor\Reflection\DocBlockFactoryInterface;
+use Teddytrombone\IdeCompanion\Fluid\Core\ErrorHandler\ErrorCollectorHandler;
+use Teddytrombone\IdeCompanion\Fluid\Rendering\TolerantViewHelperResolver;
+use TYPO3Fluid\Fluid\Core\ErrorHandler\TolerantErrorHandler;
 
 class ViewHelperUtility
 {
@@ -57,14 +59,45 @@ class ViewHelperUtility
         $this->htmlConverter = new HtmlConverter();
     }
 
+    public function getCodeErrors(string $content): ?array
+    {
+        $renderingContext = GeneralUtility::makeInstance(RenderingContextFactory::class)->create();
+        $errorCollector = new ErrorCollectorHandler($renderingContext);
+        $renderingContext->setErrorHandler($errorCollector);
+        try {
+            // avoid removing html tag from content as it messes up line numbers
+            $content = str_replace(
+                'data-namespace-typo3-fluid="true"',
+                'data-namespace-typo3-fluid="fals"',
+                $content
+            );
+            $renderingContext->getTemplateParser()->parse($content);
+        } catch (\RuntimeException $ex) {
+            GeneralUtility::makeInstance(LoggingUtility::class)->getLogger()->debug($ex);
+            $errors = $errorCollector->getErrors();
+            $errors[] = [
+                'message' => $ex->getPrevious()->getMessage(),
+                'position' => $renderingContext->getTemplateParser()->getCurrentParsingPointers(),
+            ];
+            return $errors;
+        }
+        return null;
+    }
+
     /**
      * @return array<string,array<int,string>>
      */
     protected function loadNamespacesFromSource(string $content): array
     {
-        $renderingContext = GeneralUtility::makeInstance(RenderingContextFactory::class)->create();
-        $renderingContext->getTemplateParser()->parse($content);
-        return $renderingContext->getViewHelperResolver()->getNamespaces();
+        try {
+            $renderingContext = GeneralUtility::makeInstance(RenderingContextFactory::class)->create();
+            foreach ($renderingContext->getTemplateProcessors() as $templateProcessor) {
+                $content = $templateProcessor->preProcessSource($content);
+            }
+            return $renderingContext->getViewHelperResolver()->getNamespaces();
+        } catch (\Exception $ex) {
+        }
+        return [];
     }
 
     public function getPossibleTagsFromSource(string $content)

@@ -18,6 +18,8 @@ use Phpactor\LanguageServer\Core\Dispatcher\DispatcherFactory;
 use Phpactor\LanguageServer\Handler\Workspace\CommandHandler;
 use Phpactor\LanguageServer\Middleware\ResponseHandlingMiddleware;
 use Phpactor\LanguageServer\Core\Command\CommandDispatcher;
+use Phpactor\LanguageServer\Core\Diagnostics\AggregateDiagnosticsProvider;
+use Phpactor\LanguageServer\Core\Diagnostics\DiagnosticsEngine;
 use Phpactor\LanguageServer\Handler\System\ServiceHandler;
 use Phpactor\LanguageServer\Core\Handler\Handlers;
 use Phpactor\LanguageServer\Handler\TextDocument\TextDocumentHandler;
@@ -31,10 +33,13 @@ use Phpactor\LanguageServer\Core\Server\ResponseWatcher\DeferredResponseWatcher;
 use Phpactor\LanguageServer\Core\Server\Transmitter\MessageTransmitter;
 use Phpactor\LanguageServer\Middleware\HandlerMiddleware;
 use Phpactor\LanguageServer\Middleware\ShutdownMiddleware;
+use Phpactor\LanguageServer\Service\DiagnosticsService;
 use Psr\Log\LoggerInterface;
 use Teddytrombone\IdeCompanion\Lsp\Completion\ExtensionPathCompletionHandler;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use Teddytrombone\IdeCompanion\Lsp\Completion\FluidCompletionHandler;
+use Teddytrombone\IdeCompanion\Lsp\Diagnostics\FluidDiagnosticsProvider;
+use Teddytrombone\IdeCompanion\Lsp\Diagnostics\TestDiagnosticsProvider;
 use Teddytrombone\IdeCompanion\Utility\LoggingUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
@@ -56,12 +61,26 @@ class FluidLsDispatcherFactory implements DispatcherFactory
         $responseWatcher = new DeferredResponseWatcher();
         $clientApi = new ClientApi(new JsonRpcClient($transmitter, $responseWatcher));
 
-        $serviceProviders = new ServiceProviders();
-
-        $serviceManager = new ServiceManager($serviceProviders, $this->logger);
         $workspace = new Workspace();
 
+        $diagnosticsService = new DiagnosticsService(
+            new DiagnosticsEngine($clientApi, new AggregateDiagnosticsProvider(
+                $this->logger,
+                new FluidDiagnosticsProvider()
+            )),
+            true,
+            true,
+            $workspace
+        );
+
+        $serviceProviders = new ServiceProviders(
+            $diagnosticsService
+        );
+
+        $serviceManager = new ServiceManager($serviceProviders, $this->logger);
+
         $eventDispatcher = new AggregateEventDispatcher(
+            $diagnosticsService,
             new ServiceListener($serviceManager),
             new WorkspaceListener($workspace)
         );
