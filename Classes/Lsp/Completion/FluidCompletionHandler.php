@@ -15,9 +15,12 @@ use Phpactor\LanguageServerProtocol\CompletionItemKind;
 use Phpactor\LanguageServerProtocol\CompletionOptions;
 use Phpactor\LanguageServerProtocol\CompletionParams;
 use Phpactor\LanguageServerProtocol\DefinitionParams;
+use Phpactor\LanguageServerProtocol\Hover;
+use Phpactor\LanguageServerProtocol\HoverParams;
 use Phpactor\LanguageServerProtocol\Location;
 use Phpactor\LanguageServerProtocol\MarkupContent;
 use Phpactor\LanguageServerProtocol\MarkupKind;
+use Phpactor\LanguageServerProtocol\Range;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use Teddytrombone\IdeCompanion\Lsp\Converter\PositionConverter;
 use Teddytrombone\IdeCompanion\Parser\CompletionParser;
@@ -68,6 +71,7 @@ class FluidCompletionHandler implements Handler, CanRegisterCapabilities
         return [
             'textDocument/completion' => 'complete',
             'textDocument/definition' => 'definition',
+            'textDocument/hover' => 'hover',
         ];
     }
 
@@ -88,6 +92,44 @@ class FluidCompletionHandler implements Handler, CanRegisterCapabilities
                 if ($file && $range) {
                     return new Location('file://' . $file, $range);
                 }
+            }
+            return null;
+        });
+    }
+
+    public function hover(HoverParams $params): Promise
+    {
+        GeneralUtility::makeInstance(LoggingUtility::class)->getLogger()->debug(print_r([$params], true));
+        return \Amp\call(function () use ($params) {
+            $textDocument = $this->workspace->get($params->textDocument->uri);
+            $offset = PositionConverter::positionToByteOffset($params->position, $textDocument->text);
+
+            GeneralUtility::makeInstance(LoggingUtility::class)->getLogger()->debug(print_r([$offset, $offset->toInt()], true));
+            $namespacedTags = $this->viewHelperUtility->getPossibleTagsFromSource($textDocument->text);
+            $result = $this->completionParser->parseForCompleteFluidTag($textDocument->text, $offset->toInt(), array_keys($namespacedTags));
+
+            if (
+                in_array($result->getStatus(), [ParsedTagResult::STATUS_TAG, ParsedTagResult::STATUS_ATTRIBUTE, ParsedTagResult::STATUS_END_TAG])
+            ) {
+                $tag = $namespacedTags[$result->getNamespace()][$result->getTag()] ?? null;
+                if (!$tag) {
+                    return null;
+                }
+                GeneralUtility::makeInstance(LoggingUtility::class)->getLogger()->debug(print_r([$result], true));
+                $hoverResult = new Hover(new MarkupContent(MarkupKind::MARKDOWN, $tag['description'] ?? ''));
+
+                if ($result->getStartPosition() !== null) {
+                    GeneralUtility::makeInstance(LoggingUtility::class)->getLogger()->debug(
+                        mb_substr($textDocument->text, $result->getStartPosition())
+                    );
+                    $tagInCode = $result->getNamespace() . ':' . $result->getTag();
+                    $hoverResult->range = new Range(
+                        PositionConverter::intByteOffsetToPosition($result->getStartPosition(), $textDocument->text),
+                        PositionConverter::intByteOffsetToPosition($result->getStartPosition() + mb_strlen($tagInCode), $textDocument->text)
+                    );
+                }
+                GeneralUtility::makeInstance(LoggingUtility::class)->getLogger()->debug(print_r([$hoverResult], true));
+                return $hoverResult;
             }
             return null;
         });
@@ -208,5 +250,6 @@ class FluidCompletionHandler implements Handler, CanRegisterCapabilities
     {
         $capabilities->completionProvider = new CompletionOptions(['<', '{', '(', ' ']);
         $capabilities->definitionProvider = true;
+        $capabilities->hoverProvider = true;
     }
 }
