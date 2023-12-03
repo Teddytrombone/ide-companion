@@ -113,33 +113,32 @@ class FluidCompletionHandler implements Handler, CanRegisterCapabilities
             }
 
             if (
-                in_array($result->getStatus(), [ParsedTagResult::STATUS_TAG, ParsedTagResult::STATUS_ATTRIBUTE, ParsedTagResult::STATUS_END_TAG])
+                !in_array($result->getStatus(), [ParsedTagResult::STATUS_TAG, ParsedTagResult::STATUS_ATTRIBUTE, ParsedTagResult::STATUS_END_TAG]) ||
+                !($tag = $namespacedTags[$result->getNamespace()][$result->getTag()] ?? null)
             ) {
-                $tag = $namespacedTags[$result->getNamespace()][$result->getTag()] ?? null;
-                if (!$tag) {
-                    return null;
-                }
-                /** @var ArgumentDefinition $argumentDefinition */
-                if (
-                    $result->getStatus() === ParsedTagResult::STATUS_ATTRIBUTE &&
-                    !empty($result->getArgumentName()) &&
-                    !empty($argumentDefinition = $tag['arguments'][$result->getArgumentName()] ?? null)
-                ) {
-                    return $this->generateHoverResult(
-                        $textDocument->text,
-                        $result->getArgumentName(),
-                        new MarkupContent(MarkupKind::PLAIN_TEXT, $argumentDefinition->getDescription()),
-                        $result->getArgumentStartPosition()
-                    );
-                }
+                return null;
+            }
+
+            /** @var ArgumentDefinition $argumentDefinition */
+            if (
+                $result->getStatus() === ParsedTagResult::STATUS_ATTRIBUTE &&
+                !empty($result->getArgumentName()) &&
+                !empty($argumentDefinition = $tag['arguments'][$result->getArgumentName()] ?? null)
+            ) {
                 return $this->generateHoverResult(
                     $textDocument->text,
-                    $result->getNamespace() . ':' . $result->getTag(),
-                    new MarkupContent(MarkupKind::MARKDOWN, $tag['description'] ?? ''),
-                    $result->getStartPosition()
+                    $result->getArgumentName(),
+                    new MarkupContent(MarkupKind::PLAIN_TEXT, $argumentDefinition->getDescription()),
+                    $result->getArgumentStartPosition()
                 );
             }
-            return null;
+
+            return $this->generateHoverResult(
+                $textDocument->text,
+                $result->getNamespace() . ':' . $result->getTag(),
+                new MarkupContent(MarkupKind::MARKDOWN, $tag['description'] ?? ''),
+                $result->getStartPosition()
+            );
         });
     }
 
