@@ -42,6 +42,11 @@ class ParsedTagResult
      */
     protected $shorthand = false;
 
+    /**
+     * @var ?int
+     */
+    protected $startPosition = null;
+
     public function getNamespace(): ?string
     {
         return $this->namespace;
@@ -105,5 +110,16 @@ class ParsedTagResult
     public function setIsShorthandFromString(string $value): self
     {
         return $this->setIsShorthand(substr($value, 0, 1) === '{');
+    }
+
+    public function getStartPosition(): ?int
+    {
+        return $this->startPosition;
+    }
+
+    public function setStartPosition(?int $startPosition): self
+    {
+        $this->startPosition = $startPosition;
+        return $this;
     }
 }
