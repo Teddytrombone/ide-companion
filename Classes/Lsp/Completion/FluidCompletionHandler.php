@@ -27,6 +27,7 @@ use Teddytrombone\IdeCompanion\Parser\CompletionParser;
 use Teddytrombone\IdeCompanion\Parser\ParsedTagResult;
 use Teddytrombone\IdeCompanion\Utility\LoggingUtility;
 use Teddytrombone\IdeCompanion\Utility\ViewHelperUtility;
+use TYPO3Fluid\Fluid\Core\ViewHelper\ArgumentDefinition;
 
 class FluidCompletionHandler implements Handler, CanRegisterCapabilities
 {
@@ -99,14 +100,17 @@ class FluidCompletionHandler implements Handler, CanRegisterCapabilities
 
     public function hover(HoverParams $params): Promise
     {
-        GeneralUtility::makeInstance(LoggingUtility::class)->getLogger()->debug(print_r([$params], true));
         return \Amp\call(function () use ($params) {
             $textDocument = $this->workspace->get($params->textDocument->uri);
             $offset = PositionConverter::positionToByteOffset($params->position, $textDocument->text);
 
-            GeneralUtility::makeInstance(LoggingUtility::class)->getLogger()->debug(print_r([$offset, $offset->toInt()], true));
             $namespacedTags = $this->viewHelperUtility->getPossibleTagsFromSource($textDocument->text);
             $result = $this->completionParser->parseForCompleteFluidTag($textDocument->text, $offset->toInt(), array_keys($namespacedTags));
+            if (
+                !in_array($result->getStatus(), [ParsedTagResult::STATUS_TAG, ParsedTagResult::STATUS_ATTRIBUTE, ParsedTagResult::STATUS_END_TAG])
+            ) {
+                $result = $this->completionParser->parseForFluidTag($textDocument->text, $offset->toInt(), array_keys($namespacedTags));
+            }
 
             if (
                 in_array($result->getStatus(), [ParsedTagResult::STATUS_TAG, ParsedTagResult::STATUS_ATTRIBUTE, ParsedTagResult::STATUS_END_TAG])
@@ -115,24 +119,41 @@ class FluidCompletionHandler implements Handler, CanRegisterCapabilities
                 if (!$tag) {
                     return null;
                 }
-                GeneralUtility::makeInstance(LoggingUtility::class)->getLogger()->debug(print_r([$result], true));
-                $hoverResult = new Hover(new MarkupContent(MarkupKind::MARKDOWN, $tag['description'] ?? ''));
-
-                if ($result->getStartPosition() !== null) {
-                    GeneralUtility::makeInstance(LoggingUtility::class)->getLogger()->debug(
-                        mb_substr($textDocument->text, $result->getStartPosition())
-                    );
-                    $tagInCode = $result->getNamespace() . ':' . $result->getTag();
-                    $hoverResult->range = new Range(
-                        PositionConverter::intByteOffsetToPosition($result->getStartPosition(), $textDocument->text),
-                        PositionConverter::intByteOffsetToPosition($result->getStartPosition() + mb_strlen($tagInCode), $textDocument->text)
+                /** @var ArgumentDefinition $argumentDefinition */
+                if (
+                    $result->getStatus() === ParsedTagResult::STATUS_ATTRIBUTE &&
+                    !empty($result->getArgumentName()) &&
+                    !empty($argumentDefinition = $tag['arguments'][$result->getArgumentName()] ?? null)
+                ) {
+                    return $this->generateHoverResult(
+                        $textDocument->text,
+                        $result->getArgumentName(),
+                        new MarkupContent(MarkupKind::PLAIN_TEXT, $argumentDefinition->getDescription()),
+                        $result->getArgumentStartPosition()
                     );
                 }
-                GeneralUtility::makeInstance(LoggingUtility::class)->getLogger()->debug(print_r([$hoverResult], true));
-                return $hoverResult;
+                return $this->generateHoverResult(
+                    $textDocument->text,
+                    $result->getNamespace() . ':' . $result->getTag(),
+                    new MarkupContent(MarkupKind::MARKDOWN, $tag['description'] ?? ''),
+                    $result->getStartPosition()
+                );
             }
             return null;
         });
+    }
+
+    protected function generateHoverResult(string $text, string $expectedHoverText, MarkupContent $content, ?int $startPosition): Hover
+    {
+        $hoverResult = new Hover($content);
+
+        if ($startPosition !== null) {
+            $hoverResult->range = new Range(
+                PositionConverter::intByteOffsetToPosition($startPosition, $text),
+                PositionConverter::intByteOffsetToPosition($startPosition + mb_strlen($expectedHoverText), $text)
+            );
+        }
+        return $hoverResult;
     }
 
     public function complete(CompletionParams $params, CancellationToken $cancellation): Promise

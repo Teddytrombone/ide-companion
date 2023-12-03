@@ -47,6 +47,16 @@ class ParsedTagResult
      */
     protected $startPosition = null;
 
+    /**
+     * @var ?string
+     */
+    protected $argumentName = null;
+
+    /**
+     * @var ?int
+     */
+    protected $argumentStartPosition = null;
+
     public function getNamespace(): ?string
     {
         return $this->namespace;
@@ -120,6 +130,28 @@ class ParsedTagResult
     public function setStartPosition(?int $startPosition): self
     {
         $this->startPosition = $startPosition;
+        return $this;
+    }
+
+    public function getArgumentName(): ?string
+    {
+        return $this->argumentName;
+    }
+
+    public function setArgumentName(?string $argumentName): self
+    {
+        $this->argumentName = $argumentName;
+        return $this;
+    }
+
+    public function getArgumentStartPosition(): ?int
+    {
+        return $this->argumentStartPosition;
+    }
+
+    public function setArgumentStartPosition(?int $argumentStartPosition): self
+    {
+        $this->argumentStartPosition = $argumentStartPosition;
         return $this;
     }
 }

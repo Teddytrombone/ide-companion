@@ -6,6 +6,7 @@ namespace Teddytrombone\IdeCompanion\Parser;
 
 use TYPO3Fluid\Fluid\Core\Parser\Patterns;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Extbase\Utility\DebuggerUtility;
 
 /**
  *
@@ -105,7 +106,28 @@ class CompletionParser
 
     public function parseForFluidTag($content, $position, $allowedNamespaces): ParsedTagResult
     {
-        $ret = GeneralUtility::makeInstance(ParsedTagResult::class);
+        $result = $this->matchInternal($content, $position, $allowedNamespaces);
+        if ($result === null) {
+            return GeneralUtility::makeInstance(ParsedTagResult::class);
+        } elseif ($result->getStatus() === ParsedTagResult::STATUS_ATTRIBUTE) {
+            $after = substr($content, $position);
+            $newPosition = $position;
+            if (preg_match('/^[a-zA-Z0-9\-_]+/', $after, $match)) {
+                $newPosition += strlen($match[0]);
+            }
+            $before = substr($content, 0, $newPosition);
+            if (preg_match('/[a-zA-Z0-9\-_]+$/', $before, $match)) {
+                $result
+                    ->setArgumentName($match[0])
+                    ->setArgumentStartPosition($newPosition - strlen($match[0]));
+            }
+        }
+
+        return $result;
+    }
+
+    protected function matchInternal($content, $position, $allowedNamespaces): ?ParsedTagResult
+    {
         $before = substr($content, 0, $position);
         $splitted = preg_split(Patterns::$SPLIT_PATTERN_TEMPLATE_DYNAMICTAGS, $before, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
         $lastSplit = array_pop($splitted);
@@ -117,7 +139,6 @@ class CompletionParser
         if ($lastSection === null) {
             $lastSection = $lastSplit;
         }
-
         if (preg_match(self::PATTERN_TAG_START, $lastSplit, $match, PREG_OFFSET_CAPTURE)) {
             $currentNamespace = $match[1][0] ?? null;
             $foundNamespaces = [];
@@ -126,7 +147,7 @@ class CompletionParser
                     return $namespace === $currentNamespace || str_starts_with($namespace, $currentNamespace);
                 });
                 if (empty($foundNamespaces)) {
-                    return $ret;
+                    return null;
                 }
             }
             return $this->genereateParsedTagResultFromPregMatchWithDefaultGroups($match, $lastSplit, $position);
@@ -134,14 +155,14 @@ class CompletionParser
             return $result;
         } elseif (($result = $this->matchShorthandSyntaxWithAttributesNotClosed($lastSection, $position)) !== null) {
             return $result;
-        } elseif (($result = $this->matchClosingTag($lastSection, $position)) !== null) {
+        } elseif (($result = $this->matchClosingTag($lastSplit, $position)) !== null) {
             return $result;
         } elseif (($result = $this->matchShorthandSyntaxChainedNotOpened($lastSection, $position)) !== null) {
             return $result;
         } elseif (($result = $this->matchShorthandSyntaxNotOpened($lastSection, $position)) !== null) {
             return $result;
         }
-        return $ret;
+        return null;
     }
 
     protected function matchTagWithAttributesNotClosed(string $targetString, int $position): ?ParsedTagResult
